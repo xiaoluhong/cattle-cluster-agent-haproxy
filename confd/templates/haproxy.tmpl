@@ -1,0 +1,30 @@
+global
+    maxconn 100000
+    log 127.0.0.1 local0 debug
+
+defaults
+    mode tcp
+    timeout connect 5s
+    timeout client 60s
+    timeout server 60s
+    timeout queue 10s
+    log global
+
+listen stats
+    bind :10086
+    mode http
+    stats enable
+    stats hide-version
+    stats refresh 3s
+    stats realm Haproxy\ Statistics
+    stats uri /
+    stats auth rancher:Rancher@123456
+
+listen api-server
+  bind *:9443
+  balance leastconn
+  option httpchk GET /healthz HTTP/1.0
+  http-check expect string ok
+  {{ $servers := split (getenv "ENDPOINTS") "," }}{{range $servers}}
+  server {{.}} {{.}}:6443 check inter 2000 rise 2 check-ssl ca-file /etc/kubernetes/ssl/kube-ca.pem crt /home/ssl-crt.pem
+  {{end}}
