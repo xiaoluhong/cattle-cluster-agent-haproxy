@@ -10,7 +10,11 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s 
 
 COPY confd/ /etc/confd/
 COPY endpoint.sh /endpoint.sh
+COPY haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
 
-RUN chmod +x /usr/bin/confd /endpoint.sh
+# 此处添加小工具
+COPY xxxx /usr/bin/xxxx
+
+RUN chmod +x /usr/bin/confd /endpoint.sh /usr/bin/xxxx
 
 CMD /endpoint.sh
