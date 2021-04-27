@@ -6,4 +6,4 @@ keys  = [
 ]
 
 check_cmd = "haproxy -c -f {{ .src }}"
-reload_cmd  = "haproxy -f /usr/local/etc/haproxy/haproxy.cfg -p /run/haproxy.pid -D -sf $(cat /run/haproxy.pid)"
+reload_cmd  = "haproxy -f /usr/local/etc/haproxy/haproxy.cfg -p /run/haproxy.pid -D -sf $(cat /run/haproxy.pid) -x /run/haproxy.sock"
