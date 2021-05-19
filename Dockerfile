@@ -10,13 +10,19 @@ FROM    alpine:edge
 # Get confd
 ARG     CONFD_VERSION=0.16.0
 
-RUN     apk --no-cache add \
+RUN     apk update \
+    &&  apk add \
         keepalived \
         wget \
+        openssl \
+        iptables \
         curl \
         bash \
+        ipvsadm \
         bash-completion \
         vim \
+        net-tools \
+        iputils \
         rsyslog \
         ca-certificates \
         logrotate \
