@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    cattle.io/creator: norman
+    workload.user.cattle.io/workloadselector: daemonSet-cattle-system-nginx-proxy
+  name: nginx-proxy
+  namespace: kube-system
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: daemonSet-cattle-system-nginx-proxy
+  template:
+    metadata:
+      labels:
+        workload.user.cattle.io/workloadselector: daemonSet-cattle-system-nginx-proxy
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/controlplane
+                operator: In
+                values:
+                - "true"
+      containers:
+      - image: nginx:alpine
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 10443
+            scheme: HTTP
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          successThreshold: 1
+          timeoutSeconds: 2
+        name: nginx-proxy
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 10443
+            scheme: HTTP
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          successThreshold: 2
+          timeoutSeconds: 2
+        resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {}
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+        stdin: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+        volumeMounts:
+        - mountPath: /etc/kubernetes/ssl
+          name: k8s-ssl
+          readOnly: true
+        - mountPath: /etc/nginx/nginx.conf
+          name: nginx-conf
+          subPath: nginx.conf
+      dnsConfig: {}
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - hostPath:
+          path: /etc/kubernetes/ssl
+          type: ""
+        name: k8s-ssl
+      - configMap:
+          defaultMode: 256
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+          name: nginx-proxy
+          optional: false
+        name: nginx-conf
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+
